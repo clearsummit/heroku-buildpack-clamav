@@ -15,3 +15,5 @@ rm -rf "${build}/.clamav-data"
 cp -rp "${cache}/clamav-data" "${build}/.clamav-data"
 echo "database in ${build}/.clamav-data:"
 ls -l "${build}/.clamav-data"
+rm -rf "${cache}/clamav-data"
+
