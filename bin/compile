@@ -1,18 +1,54 @@
 #!/usr/bin/env bash
 # bin/compile build_path cache_path
-build="$1"
-cache="$2"
+
 set -e
-rm -rf "${cache}/clamav-data"
-mkdir -p "${cache}/clamav-data"
-mkdir ${build}/clamav
-echo 'DatabaseMirror database.clamav.net' > ${build}/clamav/freshclam.conf
-# Hack to eliminate missing library error. libjson-c.so.2.0.0 is loaded in the wrong place
-#LD_LIBRARY_PATH="$LD_LIBRARY_PATH$(dirname $(find /tmp/ -name libjson-c.so.2.0.0)):"
-# Override the specified datadir so we retain changes via the cache.
-echo "build and cache in ${build} and ${cache}"
-freshclam --config-file="${build}/clamav/freshclam.conf" --datadir="${cache}/clamav-data/" --log=/dev/stdout --quiet
-rm -rf "${build}/.clamav-data"
-cp -rp "${cache}/clamav-data" "${build}/.clamav-data"
-echo "database in ${build}/.clamav-data:"
-ls -l "${build}/.clamav-data"
+
+BUILD_DIR=$1
+CACHE_DIR=$2
+
+BUILDPACK_DIR="$(dirname $(dirname $0))"
+PATH="$BUILD_DIR/.apt/usr/sbin:$PATH"
+
+function topic() {
+  echo "-----> $*"
+}
+
+function indent() {
+  c='s/^/       /'
+  case $(uname) in
+    Darwin) sed -l "$c";;
+    *)      sed -u "$c";;
+  esac
+}
+
+mkdir -p "$CACHE_DIR/clamav-data"
+mkdir -p "$BUILD_DIR/clamav"
+
+echo ""
+
+topic "Generating freshclam.conf"
+cat >> "$BUILD_DIR/clamav/freshclam.conf" << EOFEOF
+DatabaseMirror database.clamav.net
+EOFEOF
+
+topic "Generating clamd.conf"
+cat >> "$BUILD_DIR/clamav/clamd.conf" << EOFEOF
+DatabaseDirectory /app/clamav/data/
+Foreground yes
+LocalSocket /app/clamav/clamd.sock
+LogVerbose yes
+EOFEOF
+
+topic "Moving start-clamd script to app/bin"
+mkdir -p "$BUILD_DIR/bin"
+cp "$BUILDPACK_DIR/bin/start-clamd" "$BUILD_DIR/bin/"
+chmod +x "$BUILD_DIR/bin/start-clamd"
+
+topic 'Running freshclam to create the virus database'
+# Override the specified datadir so we retain changes via the CACHE_DIR.
+freshclam --config-file="$BUILD_DIR/clamav/freshclam.conf" --datadir="$CACHE_DIR/clamav-data/" | indent
+topic 'Moving ClamAV database to BUILD_DIR'
+rm -rf "$BUILD_DIR/clamav/data"
+cp -rp "$CACHE_DIR/clamav-data" "$BUILD_DIR/clamav/data"
+
+topic "ClamAV done"

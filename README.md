@@ -4,7 +4,8 @@ heroku-buildpack-clamav
 A [heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for setting up a clamd daemon.
 
 ## Usage
-    Add https://github.com/ddollar/heroku-buildpack-apt to your buildpacks, before this buildpack
-    Create a Aptfile with minimally, clamav-daemon and clamav-freshclam
-    Add clamav-unofficial-sig if you'd like those signatures included
-    Create a worker that starts clamd
+
+1. Add heroku buildpack apt: `heroku buildpacks:add --index 1 heroku-community/apt`
+1. Add `Aptfile` in root directory with content `clamav clamav-daemon clamav-freshclam`
+1. Add this buildpack in `app.json`:  `{ "url": "https://github.com/riskmethods/heroku-buildpack-clamav" }`
+1. Change `Procfile` worker line to this: `worker: bin/start-clamd bundle exec sidekiq`

@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
+# bin/compile build_path
+
 echo "--- {}"
-exit 0
