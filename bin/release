@@ -2,12 +2,3 @@
 # bin/compile build_path
 
 echo "--- {}"
-
-mkdir -p "$BUILD_DIR/clamav-data"
-
-topic 'Running freshclam to create the virus database'
-# Override the specified datadir so we retain changes via the CACHE_DIR.
-freshclam --config-file="$BUILD_DIR/clamav/freshclam.conf" --datadir="$BUILD_DIR/clamav-data/" | indent
-topic 'Moving ClamAV database to BUILD_DIR'
-rm -rf "$BUILD_DIR/clamav/data"
-cp -rp "$BUILD_DIR/clamav-data" "$BUILD_DIR/clamav/data"
