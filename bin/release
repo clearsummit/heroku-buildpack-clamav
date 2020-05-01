@@ -3,6 +3,8 @@
 
 echo "--- {}"
 
+mkdir -p "$BUILD_DIR/clamav-data"
+
 topic 'Running freshclam to create the virus database'
 # Override the specified datadir so we retain changes via the CACHE_DIR.
 freshclam --config-file="$BUILD_DIR/clamav/freshclam.conf" --datadir="$BUILD_DIR/clamav-data/" | indent
